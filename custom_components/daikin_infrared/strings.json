@@ -1,0 +1,19 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Daikin Infrared",
+        "description": "Choose the Daikin profile and infrared emitter to use.",
+        "data": {
+          "model_profile": "Model profile",
+          "infrared_emitter_entity_id": "Infrared emitter",
+          "name": "Name"
+        }
+      }
+    },
+    "abort": {
+      "no_emitters": "No infrared emitters are available."
+    }
+  }
+}
+
