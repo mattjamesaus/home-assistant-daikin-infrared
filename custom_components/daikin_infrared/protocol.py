@@ -62,8 +62,9 @@ class DaikinClimateState:
     """Assumed Daikin climate state used to generate a full IR command."""
 
     hvac_mode: str = "cool"
+    power_on: bool = True
     target_temperature: float = 24.0
-    fan_mode: str = "auto"
+    fan_mode: str = "low"
     swing_mode: str = "off"
 
 
@@ -101,7 +102,7 @@ def build_daikin_frames(state: DaikinClimateState) -> DaikinFrames:
             0x27,
             0x00,
             0x00,
-            _operation_mode_byte(state.hvac_mode),
+            _operation_mode_byte(state.hvac_mode, state.power_on),
             _temperature_byte(state.hvac_mode, state.target_temperature),
             0x00,
             0x00,
@@ -140,11 +141,12 @@ def build_daikin_timings(state: DaikinClimateState) -> list[int]:
     return timings
 
 
-def _operation_mode_byte(hvac_mode: str) -> int:
+def _operation_mode_byte(hvac_mode: str, power_on: bool) -> int:
     """Return the Daikin mode byte for an HVAC mode string."""
-    if hvac_mode == "off":
-        return MODE_OFF
-    return HVAC_MODE_BYTES[hvac_mode] | MODE_ON
+    mode_byte = HVAC_MODE_BYTES[hvac_mode]
+    if power_on:
+        mode_byte |= MODE_ON
+    return mode_byte
 
 
 def _temperature_byte(hvac_mode: str, target_temperature: float) -> int:
@@ -180,4 +182,3 @@ def _frame_timings(frame: Iterable[int]) -> list[int]:
 def _checksum(frame: Iterable[int]) -> int:
     """Return Daikin's one-byte additive checksum."""
     return sum(frame) & 0xFF
-

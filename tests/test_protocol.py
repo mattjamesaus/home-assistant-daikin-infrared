@@ -14,7 +14,7 @@ def test_cool_state_builds_three_daikin_frames_and_checksum():
         DaikinClimateState(
             hvac_mode="cool",
             target_temperature=23,
-            fan_mode="auto",
+            fan_mode="low",
             swing_mode="off",
         )
     )
@@ -31,7 +31,7 @@ def test_cool_state_builds_three_daikin_frames_and_checksum():
             0x31,
             0x2E,
             0x00,
-            0xA0,
+            0x30,
             0x00,
             0x00,
             0x06,
@@ -41,24 +41,25 @@ def test_cool_state_builds_three_daikin_frames_and_checksum():
             0xC0,
             0x00,
             0x00,
-            0x37,
+            0xC7,
         ]
     )
 
 
-def test_off_state_clears_power_mode_but_keeps_target_temperature():
+def test_off_state_clears_power_bit_but_keeps_last_active_mode():
     frames = build_daikin_frames(
         DaikinClimateState(
-            hvac_mode="off",
+            hvac_mode="heat",
+            power_on=False,
             target_temperature=25,
-            fan_mode="medium",
+            fan_mode="low",
             swing_mode="vertical",
         )
     )
 
-    assert frames.frame3[5] == 0x00
+    assert frames.frame3[5] == 0x40
     assert frames.frame3[6] == 0x32
-    assert frames.frame3[8] == 0x5F
+    assert frames.frame3[8] == 0x3F
     assert frames.frame3[-1] == sum(frames.frame3[:-1]) & 0xFF
 
 

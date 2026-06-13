@@ -26,7 +26,7 @@ This first release is intentionally narrow. It targets a Daikin XL indoor unit s
 
 - HVAC modes: off, cool, heat, heat/cool, dry, fan only.
 - Target temperature: 10-30 degrees Celsius in 1 degree steps.
-- Fan modes: auto, low, medium, high.
+- Fan modes: low, medium, high.
 - Swing modes: off, vertical, horizontal, both.
 
 ## Assumed State
@@ -39,7 +39,9 @@ Receiver-based state sync may be added later if a compatible Home Assistant infr
 
 Daikin IR commands are full-state packets, not tiny button presses. This integration serializes sends and waits at least 1.5 seconds between completed transmissions so quick UI changes do not fire multiple long IR packets back-to-back.
 
-For testing, wait a couple of seconds between changes and start with a simple command such as cool, 23 degrees, fan auto. If the emitter flashes but the unit does not beep or respond, the next useful evidence is a captured IR frame from the physical remote for the same setting.
+For testing, wait a couple of seconds between changes and start with a simple command such as cool, 23 degrees, fan low. If the emitter flashes but the unit does not beep or respond, the next useful evidence is a captured IR frame from the physical remote for the same setting.
+
+This early house-specific profile does not expose fan auto because this unit appears more reliable when commands are sent with an explicit fan speed.
 
 ## Development
 

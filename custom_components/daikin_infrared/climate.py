@@ -9,7 +9,6 @@ from typing import Any
 
 from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature, HVACMode
 from homeassistant.components.climate.const import (
-    FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
@@ -51,7 +50,6 @@ HA_TO_PROTOCOL_HVAC = {
 }
 
 HA_TO_PROTOCOL_FAN = {
-    FAN_AUTO: "auto",
     FAN_LOW: "low",
     FAN_MEDIUM: "medium",
     FAN_HIGH: "high",
@@ -92,7 +90,7 @@ class DaikinInfraredClimate(InfraredEmitterConsumerEntity, ClimateEntity, Restor
         HVACMode.DRY,
         HVACMode.FAN_ONLY,
     ]
-    _attr_fan_modes = [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
+    _attr_fan_modes = [FAN_LOW, FAN_MEDIUM, FAN_HIGH]
     _attr_swing_modes = [
         SWING_OFF,
         SWING_VERTICAL,
@@ -127,8 +125,9 @@ class DaikinInfraredClimate(InfraredEmitterConsumerEntity, ClimateEntity, Restor
 
         self._attr_hvac_mode = HVACMode.OFF
         self._attr_target_temperature = 24.0
-        self._attr_fan_mode = FAN_AUTO
+        self._attr_fan_mode = FAN_LOW
         self._attr_swing_mode = SWING_OFF
+        self._last_on_hvac_mode = HVACMode.COOL
         self._send_lock = asyncio.Lock()
         self._send_rate_limiter = SendRateLimiter(MIN_SEND_INTERVAL)
 
@@ -141,6 +140,8 @@ class DaikinInfraredClimate(InfraredEmitterConsumerEntity, ClimateEntity, Restor
 
         if last_state.state in self.hvac_modes:
             self._attr_hvac_mode = HVACMode(last_state.state)
+            if self._attr_hvac_mode != HVACMode.OFF:
+                self._last_on_hvac_mode = self._attr_hvac_mode
         if (temperature := last_state.attributes.get(ATTR_TEMPERATURE)) is not None:
             self._attr_target_temperature = float(temperature)
         if (fan_mode := last_state.attributes.get("fan_mode")) in self.fan_modes:
@@ -151,6 +152,8 @@ class DaikinInfraredClimate(InfraredEmitterConsumerEntity, ClimateEntity, Restor
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode and send the full assumed state."""
         self._attr_hvac_mode = hvac_mode
+        if hvac_mode != HVACMode.OFF:
+            self._last_on_hvac_mode = hvac_mode
         await self._send_assumed_state()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -160,6 +163,7 @@ class DaikinInfraredClimate(InfraredEmitterConsumerEntity, ClimateEntity, Restor
         self._attr_target_temperature = float(temperature)
         if self.hvac_mode == HVACMode.OFF:
             self._attr_hvac_mode = HVACMode.COOL
+            self._last_on_hvac_mode = HVACMode.COOL
         await self._send_assumed_state()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
@@ -175,7 +179,7 @@ class DaikinInfraredClimate(InfraredEmitterConsumerEntity, ClimateEntity, Restor
     async def async_turn_on(self) -> None:
         """Turn the climate entity on using the last non-off state."""
         if self.hvac_mode == HVACMode.OFF:
-            self._attr_hvac_mode = HVACMode.COOL
+            self._attr_hvac_mode = self._last_on_hvac_mode
         await self._send_assumed_state()
 
     async def async_turn_off(self) -> None:
@@ -185,8 +189,11 @@ class DaikinInfraredClimate(InfraredEmitterConsumerEntity, ClimateEntity, Restor
 
     async def _send_assumed_state(self) -> None:
         """Send the current assumed state through the configured emitter."""
+        power_on = self.hvac_mode != HVACMode.OFF
+        protocol_hvac_mode = self.hvac_mode if power_on else self._last_on_hvac_mode
         state = DaikinClimateState(
-            hvac_mode=HA_TO_PROTOCOL_HVAC[self.hvac_mode],
+            hvac_mode=HA_TO_PROTOCOL_HVAC[protocol_hvac_mode],
+            power_on=power_on,
             target_temperature=self.target_temperature,
             fan_mode=HA_TO_PROTOCOL_FAN[self.fan_mode],
             swing_mode=HA_TO_PROTOCOL_SWING[self.swing_mode],
@@ -198,8 +205,9 @@ class DaikinInfraredClimate(InfraredEmitterConsumerEntity, ClimateEntity, Restor
                 await asyncio.sleep(delay)
 
             _LOGGER.debug(
-                "Sending Daikin IR command: mode=%s temperature=%s fan=%s swing=%s",
+                "Sending Daikin IR command: mode=%s power_on=%s temperature=%s fan=%s swing=%s",
                 state.hvac_mode,
+                state.power_on,
                 state.target_temperature,
                 state.fan_mode,
                 state.swing_mode,
