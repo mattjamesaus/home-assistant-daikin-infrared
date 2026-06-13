@@ -1,9 +1,15 @@
 [project]
 name = "home-assistant-daikin-infrared"
-version = "0.0.5"
+version = "0.0.6"
 description = "Home Assistant custom integration for Daikin air conditioners via native infrared emitters"
 requires-python = ">=3.11"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+
+[project.optional-dependencies]
+dev = [
+  "broadlink==0.19.0",
+  "pytest",
+]

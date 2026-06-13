@@ -20,7 +20,7 @@ def test_cool_state_builds_three_daikin_frames_and_checksum():
     )
 
     assert frames.frame1 == bytes([0x11, 0xDA, 0x27, 0x00, 0xC5, 0x10, 0x00, 0xE7])
-    assert frames.frame2 == bytes([0x11, 0xDA, 0x27, 0x00, 0x42, 0xFC, 0x24, 0x74])
+    assert frames.frame2 == bytes([0x11, 0xDA, 0x27, 0x00, 0x42, 0xE1, 0x32, 0x67])
     assert frames.frame3 == bytes(
         [
             0x11,
@@ -36,12 +36,12 @@ def test_cool_state_builds_three_daikin_frames_and_checksum():
             0x00,
             0x06,
             0x60,
-            0x20,
+            0x00,
             0x00,
             0xC1,
-            0x82,
+            0x80,
             0x00,
-            0x72,
+            0x50,
         ]
     )
 

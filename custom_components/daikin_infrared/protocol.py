@@ -96,7 +96,7 @@ class DaikinCommand:
 def build_daikin_frames(state: DaikinClimateState) -> DaikinFrames:
     """Build the three Daikin frames for the provided climate state."""
     frame1 = bytes([0x11, 0xDA, 0x27, 0x00, 0xC5, 0x10, 0x00, 0xE7])
-    frame2 = bytes([0x11, 0xDA, 0x27, 0x00, 0x42, 0xFC, 0x24, 0x74])
+    frame2 = bytes([0x11, 0xDA, 0x27, 0x00, 0x42, 0xE1, 0x32, 0x67])
     frame3 = bytearray(
         [
             0x11,
@@ -112,10 +112,10 @@ def build_daikin_frames(state: DaikinClimateState) -> DaikinFrames:
             0x00,
             0x06,
             0x60,
-            0x20,
+            0x00,
             0x00,
             0xC1,
-            0x82,
+            0x80,
             0x00,
             0x00,
         ]
