@@ -35,6 +35,12 @@ Infrared is one-way in this release. The integration assumes commands were recei
 
 Receiver-based state sync may be added later if a compatible Home Assistant infrared receiver is configured and reliable Daikin frame parsing is added.
 
+## Troubleshooting Response Issues
+
+Daikin IR commands are full-state packets, not tiny button presses. This integration serializes sends and waits at least 1.5 seconds between completed transmissions so quick UI changes do not fire multiple long IR packets back-to-back.
+
+For testing, wait a couple of seconds between changes and start with a simple command such as cool, 23 degrees, fan auto. If the emitter flashes but the unit does not beep or respond, the next useful evidence is a captured IR frame from the physical remote for the same setting.
+
 ## Development
 
 Set up local tests:

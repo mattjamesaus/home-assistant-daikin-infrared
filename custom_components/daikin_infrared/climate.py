@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
+import logging
+from time import monotonic
 from typing import Any
 
 from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature, HVACMode
@@ -31,8 +34,12 @@ from .const import (
     MODEL_PROFILES,
 )
 from .protocol import DaikinClimateState, DaikinCommand
+from .rate_limit import SendRateLimiter
 
 PARALLEL_UPDATES = 1
+MIN_SEND_INTERVAL = 1.5
+
+_LOGGER = logging.getLogger(__name__)
 
 HA_TO_PROTOCOL_HVAC = {
     HVACMode.COOL: "cool",
@@ -122,6 +129,8 @@ class DaikinInfraredClimate(InfraredEmitterConsumerEntity, ClimateEntity, Restor
         self._attr_target_temperature = 24.0
         self._attr_fan_mode = FAN_AUTO
         self._attr_swing_mode = SWING_OFF
+        self._send_lock = asyncio.Lock()
+        self._send_rate_limiter = SendRateLimiter(MIN_SEND_INTERVAL)
 
     async def async_added_to_hass(self) -> None:
         """Restore the last assumed state."""
@@ -176,13 +185,25 @@ class DaikinInfraredClimate(InfraredEmitterConsumerEntity, ClimateEntity, Restor
 
     async def _send_assumed_state(self) -> None:
         """Send the current assumed state through the configured emitter."""
-        command = DaikinCommand(
-            DaikinClimateState(
-                hvac_mode=HA_TO_PROTOCOL_HVAC[self.hvac_mode],
-                target_temperature=self.target_temperature,
-                fan_mode=HA_TO_PROTOCOL_FAN[self.fan_mode],
-                swing_mode=HA_TO_PROTOCOL_SWING[self.swing_mode],
-            )
+        state = DaikinClimateState(
+            hvac_mode=HA_TO_PROTOCOL_HVAC[self.hvac_mode],
+            target_temperature=self.target_temperature,
+            fan_mode=HA_TO_PROTOCOL_FAN[self.fan_mode],
+            swing_mode=HA_TO_PROTOCOL_SWING[self.swing_mode],
         )
-        await self._send_command(command)
-        self.async_write_ha_state()
+        async with self._send_lock:
+            delay = self._send_rate_limiter.delay_until_next_send(monotonic())
+            if delay:
+                _LOGGER.debug("Waiting %.2fs before sending Daikin IR command", delay)
+                await asyncio.sleep(delay)
+
+            _LOGGER.debug(
+                "Sending Daikin IR command: mode=%s temperature=%s fan=%s swing=%s",
+                state.hvac_mode,
+                state.target_temperature,
+                state.fan_mode,
+                state.swing_mode,
+            )
+            await self._send_command(DaikinCommand(state))
+            self._send_rate_limiter.mark_sent(monotonic())
+            self.async_write_ha_state()
