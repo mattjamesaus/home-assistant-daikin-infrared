@@ -94,20 +94,20 @@ def test_timings_are_signed_microseconds_for_home_assistant_infrared():
 
     assert timings[:12] == [
         BIT_MARK,
-        -360,
+        -460,
         BIT_MARK,
-        -360,
+        -460,
         BIT_MARK,
-        -360,
+        -460,
         BIT_MARK,
-        -360,
+        -460,
         BIT_MARK,
-        -360,
+        -460,
         BIT_MARK,
-        -26800,
+        -26400,
     ]
     assert timings[12:15] == [HEADER_MARK, -HEADER_SPACE, BIT_MARK]
-    assert timings[-1] == -200000
+    assert timings[-1] == -109500
     assert all(timing != 0 for timing in timings)
     assert timings.count(-MESSAGE_SPACE) == 2
 

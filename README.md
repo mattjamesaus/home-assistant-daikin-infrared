@@ -45,6 +45,8 @@ This early house-specific profile does not expose fan auto because this unit app
 
 The current protocol bytes and timing preamble are aligned with captures from the local ARC466-style remote learned through the Broadlink RM4 Pro.
 
+The current generated timing packet has been direct-tested through the local Broadlink and confirmed to make the indoor unit respond.
+
 ## Development
 
 Set up local tests:
