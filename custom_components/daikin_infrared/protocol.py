@@ -31,10 +31,13 @@ MODE_FAN = 0x60
 MODE_OFF = 0x00
 MODE_ON = 0x01
 
+FAN_SPEED_1 = 0x30
+FAN_SPEED_2 = 0x40
+FAN_SPEED_3 = 0x50
+FAN_SPEED_4 = 0x60
+FAN_SPEED_5 = 0x70
 FAN_AUTO = 0xA0
-FAN_LOW = 0x30
-FAN_MEDIUM = 0x50
-FAN_HIGH = 0x70
+FAN_QUIET = 0xB0
 
 HVAC_MODE_BYTES = {
     "cool": MODE_COOL,
@@ -46,9 +49,16 @@ HVAC_MODE_BYTES = {
 
 FAN_MODE_BYTES = {
     "auto": FAN_AUTO,
-    "low": FAN_LOW,
-    "medium": FAN_MEDIUM,
-    "high": FAN_HIGH,
+    "quiet": FAN_QUIET,
+    "night": FAN_QUIET,
+    "speed_1": FAN_SPEED_1,
+    "speed_2": FAN_SPEED_2,
+    "speed_3": FAN_SPEED_3,
+    "speed_4": FAN_SPEED_4,
+    "speed_5": FAN_SPEED_5,
+    "low": FAN_SPEED_1,
+    "medium": FAN_SPEED_3,
+    "high": FAN_SPEED_5,
 }
 
 SWING_BITS = {
@@ -66,7 +76,7 @@ class DaikinClimateState:
     hvac_mode: str = "cool"
     power_on: bool = True
     target_temperature: float = 24.0
-    fan_mode: str = "low"
+    fan_mode: str = "speed_1"
     swing_mode: str = "off"
 
 

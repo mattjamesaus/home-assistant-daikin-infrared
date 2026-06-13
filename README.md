@@ -26,7 +26,7 @@ This first release is intentionally narrow. It targets a Daikin XL indoor unit s
 
 - HVAC modes: off, cool, heat, heat/cool, dry, fan only.
 - Target temperature: 10-30 degrees Celsius in 1 degree steps.
-- Fan modes: low, medium, high.
+- Fan modes: speed_1, speed_2, speed_3, speed_4, speed_5, auto, quiet.
 - Swing modes: off, vertical, horizontal, both.
 
 ## Assumed State
@@ -39,9 +39,9 @@ Receiver-based state sync may be added later if a compatible Home Assistant infr
 
 Daikin IR commands are full-state packets, not tiny button presses. This integration serializes sends and waits at least 1.5 seconds between completed transmissions so quick UI changes do not fire multiple long IR packets back-to-back.
 
-For testing, wait a couple of seconds between changes and start with a simple command such as cool, 23 degrees, fan low. If the emitter flashes but the unit does not beep or respond, the next useful evidence is a captured IR frame from the physical remote for the same setting.
+For testing, wait a couple of seconds between changes and start with a simple command such as cool, 23 degrees, fan speed_1. If the emitter flashes but the unit does not beep or respond, the next useful evidence is a captured IR frame from the physical remote for the same setting.
 
-This early house-specific profile does not expose fan auto because this unit appears more reliable when commands are sent with an explicit fan speed.
+The fan speed values match the Daikin ARC466-style protocol nibble values: `speed_1` through `speed_5`, plus `auto` and `quiet`. Legacy `low`, `medium`, and `high` service values are still accepted as aliases for `speed_1`, `speed_3`, and `speed_5`.
 
 The current protocol bytes and timing preamble are aligned with captures from the local ARC466-style remote learned through the Broadlink RM4 Pro.
 

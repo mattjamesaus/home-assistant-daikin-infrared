@@ -14,7 +14,7 @@ def test_cool_state_builds_three_daikin_frames_and_checksum():
         DaikinClimateState(
             hvac_mode="cool",
             target_temperature=23,
-            fan_mode="low",
+            fan_mode="speed_1",
             swing_mode="off",
         )
     )
@@ -52,7 +52,7 @@ def test_off_state_clears_power_bit_but_keeps_last_active_mode():
             hvac_mode="heat",
             power_on=False,
             target_temperature=25,
-            fan_mode="low",
+            fan_mode="speed_1",
             swing_mode="vertical",
         )
     )
@@ -78,7 +78,7 @@ def test_fan_and_swing_modes_are_encoded_in_state_bytes():
         DaikinClimateState(
             hvac_mode="heat",
             target_temperature=21,
-            fan_mode="high",
+            fan_mode="speed_5",
             swing_mode="both",
         )
     )
@@ -87,6 +87,24 @@ def test_fan_and_swing_modes_are_encoded_in_state_bytes():
     assert frames.frame3[8] == 0x7F
     assert frames.frame3[9] == 0x0F
     assert frames.frame3[-1] == sum(frames.frame3[:-1]) & 0xFF
+
+
+def test_remote_native_fan_modes_match_arc466_values():
+    expected_fan_bytes = {
+        "speed_1": 0x30,
+        "speed_2": 0x40,
+        "speed_3": 0x50,
+        "speed_4": 0x60,
+        "speed_5": 0x70,
+        "auto": 0xA0,
+        "quiet": 0xB0,
+    }
+
+    for fan_mode, expected_byte in expected_fan_bytes.items():
+        frames = build_daikin_frames(DaikinClimateState(fan_mode=fan_mode))
+
+        assert frames.frame3[8] == expected_byte
+        assert frames.frame3[-1] == sum(frames.frame3[:-1]) & 0xFF
 
 
 def test_timings_are_signed_microseconds_for_home_assistant_infrared():

@@ -70,7 +70,23 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--timeout", default=5, type=int, help="Network timeout seconds")
     parser.add_argument("--mode", default="cool", choices=["cool", "heat", "heat_cool", "dry", "fan_only"])
     parser.add_argument("--temp", default=23, type=float, help="Target temperature")
-    parser.add_argument("--fan", default="low", choices=["low", "medium", "high"])
+    parser.add_argument(
+        "--fan",
+        default="speed_1",
+        choices=[
+            "speed_1",
+            "speed_2",
+            "speed_3",
+            "speed_4",
+            "speed_5",
+            "auto",
+            "quiet",
+            "low",
+            "medium",
+            "high",
+            "night",
+        ],
+    )
     parser.add_argument("--swing", default="off", choices=["off", "vertical", "horizontal", "both"])
     parser.add_argument("--off", action="store_true", help="Send power off while preserving mode")
     parser.add_argument("--send", action="store_true", help="Actually transmit IR")

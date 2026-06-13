@@ -9,9 +9,6 @@ from typing import Any
 
 from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature, HVACMode
 from homeassistant.components.climate.const import (
-    FAN_HIGH,
-    FAN_LOW,
-    FAN_MEDIUM,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
@@ -49,10 +46,26 @@ HA_TO_PROTOCOL_HVAC = {
     HVACMode.OFF: "off",
 }
 
+FAN_AUTO = "auto"
+FAN_QUIET = "quiet"
+FAN_SPEED_1 = "speed_1"
+FAN_SPEED_2 = "speed_2"
+FAN_SPEED_3 = "speed_3"
+FAN_SPEED_4 = "speed_4"
+FAN_SPEED_5 = "speed_5"
+
 HA_TO_PROTOCOL_FAN = {
-    FAN_LOW: "low",
-    FAN_MEDIUM: "medium",
-    FAN_HIGH: "high",
+    FAN_AUTO: "auto",
+    FAN_QUIET: "quiet",
+    FAN_SPEED_1: "speed_1",
+    FAN_SPEED_2: "speed_2",
+    FAN_SPEED_3: "speed_3",
+    FAN_SPEED_4: "speed_4",
+    FAN_SPEED_5: "speed_5",
+    "low": "speed_1",
+    "medium": "speed_3",
+    "high": "speed_5",
+    "night": "quiet",
 }
 
 HA_TO_PROTOCOL_SWING = {
@@ -90,7 +103,15 @@ class DaikinInfraredClimate(InfraredEmitterConsumerEntity, ClimateEntity, Restor
         HVACMode.DRY,
         HVACMode.FAN_ONLY,
     ]
-    _attr_fan_modes = [FAN_LOW, FAN_MEDIUM, FAN_HIGH]
+    _attr_fan_modes = [
+        FAN_SPEED_1,
+        FAN_SPEED_2,
+        FAN_SPEED_3,
+        FAN_SPEED_4,
+        FAN_SPEED_5,
+        FAN_AUTO,
+        FAN_QUIET,
+    ]
     _attr_swing_modes = [
         SWING_OFF,
         SWING_VERTICAL,
@@ -125,7 +146,7 @@ class DaikinInfraredClimate(InfraredEmitterConsumerEntity, ClimateEntity, Restor
 
         self._attr_hvac_mode = HVACMode.OFF
         self._attr_target_temperature = 24.0
-        self._attr_fan_mode = FAN_LOW
+        self._attr_fan_mode = FAN_SPEED_1
         self._attr_swing_mode = SWING_OFF
         self._last_on_hvac_mode = HVACMode.COOL
         self._send_lock = asyncio.Lock()
@@ -144,8 +165,9 @@ class DaikinInfraredClimate(InfraredEmitterConsumerEntity, ClimateEntity, Restor
                 self._last_on_hvac_mode = self._attr_hvac_mode
         if (temperature := last_state.attributes.get(ATTR_TEMPERATURE)) is not None:
             self._attr_target_temperature = float(temperature)
-        if (fan_mode := last_state.attributes.get("fan_mode")) in self.fan_modes:
-            self._attr_fan_mode = fan_mode
+        fan_mode = last_state.attributes.get("fan_mode")
+        if fan_mode in HA_TO_PROTOCOL_FAN:
+            self._attr_fan_mode = HA_TO_PROTOCOL_FAN[fan_mode]
         if (swing_mode := last_state.attributes.get("swing_mode")) in self.swing_modes:
             self._attr_swing_mode = swing_mode
 
@@ -168,7 +190,7 @@ class DaikinInfraredClimate(InfraredEmitterConsumerEntity, ClimateEntity, Restor
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode and send the full assumed state."""
-        self._attr_fan_mode = fan_mode
+        self._attr_fan_mode = HA_TO_PROTOCOL_FAN[fan_mode]
         await self._send_assumed_state()
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
