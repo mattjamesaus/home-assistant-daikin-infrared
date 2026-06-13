@@ -12,7 +12,7 @@
 
 ## File Structure
 
-- `custom_components/daikin_infrared/protocol.py`: pure Daikin ARC bytes and signed timings.
+- `custom_components/daikin_infrared/protocol.py`: pure Daikin bytes and signed timings.
 - `custom_components/daikin_infrared/climate.py`: assumed-state ClimateEntity and IR send orchestration.
 - `custom_components/daikin_infrared/config_flow.py`: emitter and profile selection.
 - `custom_components/daikin_infrared/const.py`: constants and profile data.
@@ -49,4 +49,3 @@
 - [ ] Run `python3.11 -m pytest`.
 - [ ] Run `python3.11 -m compileall custom_components tests`.
 - [ ] Inspect `git diff --check`.
-

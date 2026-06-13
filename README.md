@@ -2,7 +2,7 @@
 
 Custom Home Assistant integration for controlling a Daikin air conditioner through Home Assistant's native `infrared` platform.
 
-This first release is intentionally narrow. It targets a Daikin XL indoor unit such as `FTXV95LVMA` / `FTXV85LVMA` with an `ARC466A16` or closely related `ARC466A14` remote profile, and sends generated Daikin ARC infrared commands through a selected Home Assistant infrared emitter.
+This first release is intentionally narrow. It targets a Daikin XL indoor unit such as `FTXV95LVMA` / `FTXV85LVMA` with an `ARC466A16` or closely related `ARC466A14` remote profile, and sends generated three-frame Daikin infrared commands through a selected Home Assistant infrared emitter.
 
 ## Requirements
 
@@ -25,7 +25,7 @@ This first release is intentionally narrow. It targets a Daikin XL indoor unit s
 ## Supported Controls
 
 - HVAC modes: off, cool, heat, heat/cool, dry, fan only.
-- Target temperature: 10-30 degrees Celsius in 0.5 degree steps.
+- Target temperature: 10-30 degrees Celsius in 1 degree steps.
 - Fan modes: auto, low, medium, high.
 - Swing modes: off, vertical, horizontal, both.
 
@@ -53,5 +53,4 @@ Protocol tests run without Home Assistant:
 
 ## Design Notes
 
-This integration does not use Broadlink learned-code services. It generates Daikin ARC raw timings and sends them through Home Assistant's `infrared` abstraction, so the same climate entity can work with any emitter implementation that supports Home Assistant's native infrared platform.
-
+This integration does not use Broadlink learned-code services. It generates Daikin raw timings and sends them through Home Assistant's `infrared` abstraction, so the same climate entity can work with any emitter implementation that supports Home Assistant's native infrared platform.

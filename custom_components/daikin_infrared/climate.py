@@ -30,7 +30,7 @@ from .const import (
     DOMAIN,
     MODEL_PROFILES,
 )
-from .protocol import DaikinArcCommand, DaikinClimateState
+from .protocol import DaikinClimateState, DaikinCommand
 
 PARALLEL_UPDATES = 1
 
@@ -76,7 +76,7 @@ class DaikinInfraredClimate(InfraredEmitterConsumerEntity, ClimateEntity, Restor
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_min_temp = 10
     _attr_max_temp = 30
-    _attr_target_temperature_step = 0.5
+    _attr_target_temperature_step = 1.0
     _attr_hvac_modes = [
         HVACMode.OFF,
         HVACMode.COOL,
@@ -176,7 +176,7 @@ class DaikinInfraredClimate(InfraredEmitterConsumerEntity, ClimateEntity, Restor
 
     async def _send_assumed_state(self) -> None:
         """Send the current assumed state through the configured emitter."""
-        command = DaikinArcCommand(
+        command = DaikinCommand(
             DaikinClimateState(
                 hvac_mode=HA_TO_PROTOCOL_HVAC[self.hvac_mode],
                 target_temperature=self.target_temperature,
@@ -186,4 +186,3 @@ class DaikinInfraredClimate(InfraredEmitterConsumerEntity, ClimateEntity, Restor
         )
         await self._send_command(command)
         self.async_write_ha_state()
-

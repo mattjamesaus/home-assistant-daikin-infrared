@@ -1,4 +1,4 @@
-"""Daikin ARC infrared protocol generation.
+"""Daikin infrared protocol generation.
 
 This module intentionally has no Home Assistant imports so it can be tested
 locally without a Home Assistant test harness.
@@ -11,14 +11,12 @@ from typing import Iterable, NamedTuple
 
 DAIKIN_IR_FREQUENCY = 38_000
 
-DAIKIN_ARC_PRE_MARK = 9_950
-DAIKIN_ARC_PRE_SPACE = 25_100
-HEADER_MARK = 3_450
+HEADER_MARK = 3_360
 HEADER_SPACE = 1_760
-BIT_MARK = 400
-ONE_SPACE = 1_300
-ZERO_SPACE = 480
-MESSAGE_SPACE = 35_000
+BIT_MARK = 520
+ONE_SPACE = 1_370
+ZERO_SPACE = 360
+MESSAGE_SPACE = 32_300
 
 TEMP_MIN = 10.0
 TEMP_MAX = 30.0
@@ -69,15 +67,16 @@ class DaikinClimateState:
     swing_mode: str = "off"
 
 
-class DaikinArcFrames(NamedTuple):
-    """Generated Daikin ARC header and state frames."""
+class DaikinFrames(NamedTuple):
+    """Generated Daikin frames."""
 
-    header: bytes
-    state: bytes
+    frame1: bytes
+    frame2: bytes
+    frame3: bytes
 
 
-class DaikinArcCommand:
-    """Home Assistant infrared command for a Daikin ARC state."""
+class DaikinCommand:
+    """Home Assistant infrared command for a Daikin state."""
 
     modulation = DAIKIN_IR_FREQUENCY
     repeat_count = 0
@@ -88,44 +87,21 @@ class DaikinArcCommand:
 
     def get_raw_timings(self) -> list[int]:
         """Return signed mark/space timings in microseconds."""
-        return build_arc_timings(self.state)
+        return build_daikin_timings(self.state)
 
 
-def build_arc_frames(state: DaikinClimateState) -> DaikinArcFrames:
-    """Build the two Daikin ARC frames for the provided climate state."""
-    header = bytearray(
-        [
-            0x11,
-            0xDA,
-            0x27,
-            0x00,
-            0x02,
-            0xD0,
-            0x02,
-            0x03,
-            0x80,
-            0x03,
-            0x82,
-            0x30,
-            0x41,
-            0x1F,
-            0x82,
-            0xF4,
-            0x00,
-            0x24,
-            0x00,
-            0x00,
-        ]
-    )
-
-    state_frame = bytearray(
+def build_daikin_frames(state: DaikinClimateState) -> DaikinFrames:
+    """Build the three Daikin frames for the provided climate state."""
+    frame1 = bytes([0x11, 0xDA, 0x27, 0x00, 0xC5, 0x00, 0x00, 0xD7])
+    frame2 = bytes([0x11, 0xDA, 0x27, 0x00, 0x42, 0x49, 0x05, 0xA2])
+    frame3 = bytearray(
         [
             0x11,
             0xDA,
             0x27,
             0x00,
             0x00,
-            _operation_mode_byte(state.hvac_mode) | 0x08,
+            _operation_mode_byte(state.hvac_mode),
             _temperature_byte(state.hvac_mode, state.target_temperature),
             0x00,
             0x00,
@@ -134,33 +110,32 @@ def build_arc_frames(state: DaikinClimateState) -> DaikinArcFrames:
             0x06,
             0x60,
             0x00,
-            0x0A,
-            0xC4,
-            0x80,
-            0x24,
+            0x00,
+            0xC0,
+            0x00,
+            0x00,
             0x00,
         ]
     )
 
-    fan_high_nibble, swing_low_byte = _fan_swing_bytes(
-        state.fan_mode, state.swing_mode
-    )
-    state_frame[8] = fan_high_nibble
-    state_frame[9] = swing_low_byte
+    fan_high_byte, swing_low_byte = _fan_swing_bytes(state.fan_mode, state.swing_mode)
+    frame3[8] = fan_high_byte
+    frame3[9] = swing_low_byte
+    frame3[-1] = _checksum(frame3[:-1])
 
-    header[-1] = _checksum(header[:-1])
-    state_frame[-1] = _checksum(state_frame[:-1])
-    return DaikinArcFrames(bytes(header), bytes(state_frame))
+    return DaikinFrames(frame1=frame1, frame2=frame2, frame3=bytes(frame3))
 
 
-def build_arc_timings(state: DaikinClimateState) -> list[int]:
-    """Build signed Home Assistant infrared timings for a Daikin ARC state."""
-    frames = build_arc_frames(state)
-    timings = [DAIKIN_ARC_PRE_MARK, -DAIKIN_ARC_PRE_SPACE]
-    timings.extend(_frame_timings(frames.header))
+def build_daikin_timings(state: DaikinClimateState) -> list[int]:
+    """Build signed Home Assistant infrared timings for a Daikin state."""
+    frames = build_daikin_frames(state)
+    timings = _frame_timings(frames.frame1)
     timings.append(BIT_MARK)
     timings.append(-MESSAGE_SPACE)
-    timings.extend(_frame_timings(frames.state))
+    timings.extend(_frame_timings(frames.frame2))
+    timings.append(BIT_MARK)
+    timings.append(-MESSAGE_SPACE)
+    timings.extend(_frame_timings(frames.frame3))
     timings.append(BIT_MARK)
     return timings
 
@@ -174,15 +149,13 @@ def _operation_mode_byte(hvac_mode: str) -> int:
 
 def _temperature_byte(hvac_mode: str, target_temperature: float) -> int:
     """Return Daikin's temperature byte for the HVAC mode."""
-    if hvac_mode in ("dry", "heat_cool"):
-        return 0xC0
     if hvac_mode == "fan_only":
         return 0x32
+    if hvac_mode == "dry":
+        return 0xC0
 
     temperature = min(max(float(target_temperature), TEMP_MIN), TEMP_MAX)
-    whole_degrees = int(temperature)
-    half_degree_bit = 1 if temperature - whole_degrees >= 0.5 else 0
-    return whole_degrees << 1 | half_degree_bit
+    return round(temperature) << 1
 
 
 def _fan_swing_bytes(fan_mode: str, swing_mode: str) -> tuple[int, int]:
