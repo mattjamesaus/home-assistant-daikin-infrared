@@ -16,7 +16,9 @@ HEADER_SPACE = 1_760
 BIT_MARK = 520
 ONE_SPACE = 1_370
 ZERO_SPACE = 360
-MESSAGE_SPACE = 32_300
+PREAMBLE_SPACE = 26_800
+MESSAGE_SPACE = 37_150
+END_SPACE = 200_000
 
 TEMP_MIN = 10.0
 TEMP_MAX = 30.0
@@ -93,8 +95,8 @@ class DaikinCommand:
 
 def build_daikin_frames(state: DaikinClimateState) -> DaikinFrames:
     """Build the three Daikin frames for the provided climate state."""
-    frame1 = bytes([0x11, 0xDA, 0x27, 0x00, 0xC5, 0x00, 0x00, 0xD7])
-    frame2 = bytes([0x11, 0xDA, 0x27, 0x00, 0x42, 0x49, 0x05, 0xA2])
+    frame1 = bytes([0x11, 0xDA, 0x27, 0x00, 0xC5, 0x10, 0x00, 0xE7])
+    frame2 = bytes([0x11, 0xDA, 0x27, 0x00, 0x42, 0xFC, 0x24, 0x74])
     frame3 = bytearray(
         [
             0x11,
@@ -110,10 +112,10 @@ def build_daikin_frames(state: DaikinClimateState) -> DaikinFrames:
             0x00,
             0x06,
             0x60,
+            0x20,
             0x00,
-            0x00,
-            0xC0,
-            0x00,
+            0xC1,
+            0x82,
             0x00,
             0x00,
         ]
@@ -130,20 +132,19 @@ def build_daikin_frames(state: DaikinClimateState) -> DaikinFrames:
 def build_daikin_timings(state: DaikinClimateState) -> list[int]:
     """Build signed Home Assistant infrared timings for a Daikin state."""
     frames = build_daikin_frames(state)
-    timings = _frame_timings(frames.frame1)
-    timings.append(BIT_MARK)
+    timings = _preamble_timings()
+    timings.extend(_frame_timings(frames.frame1))
     timings.append(-MESSAGE_SPACE)
     timings.extend(_frame_timings(frames.frame2))
-    timings.append(BIT_MARK)
     timings.append(-MESSAGE_SPACE)
     timings.extend(_frame_timings(frames.frame3))
-    timings.append(BIT_MARK)
+    timings.append(-END_SPACE)
     return timings
 
 
 def _operation_mode_byte(hvac_mode: str, power_on: bool) -> int:
     """Return the Daikin mode byte for an HVAC mode string."""
-    mode_byte = HVAC_MODE_BYTES[hvac_mode]
+    mode_byte = HVAC_MODE_BYTES[hvac_mode] | 0x08
     if power_on:
         mode_byte |= MODE_ON
     return mode_byte
@@ -169,13 +170,24 @@ def _fan_swing_bytes(fan_mode: str, swing_mode: str) -> tuple[int, int]:
 def _frame_timings(frame: Iterable[int]) -> list[int]:
     """Convert bytes to signed LSB-first Daikin mark/space timings."""
     timings = [HEADER_MARK, -HEADER_SPACE]
+    timings.append(BIT_MARK)
     for byte in frame:
         for bit in range(8):
-            timings.append(BIT_MARK)
             if byte & (1 << bit):
                 timings.append(-ONE_SPACE)
             else:
                 timings.append(-ZERO_SPACE)
+            timings.append(BIT_MARK)
+    return timings
+
+
+def _preamble_timings() -> list[int]:
+    """Return the Daikin ARC466 preamble before the first frame."""
+    timings = [BIT_MARK]
+    for _ in range(5):
+        timings.append(-ZERO_SPACE)
+        timings.append(BIT_MARK)
+    timings.append(-PREAMBLE_SPACE)
     return timings
 
 

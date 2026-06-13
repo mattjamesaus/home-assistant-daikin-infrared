@@ -19,8 +19,8 @@ def test_cool_state_builds_three_daikin_frames_and_checksum():
         )
     )
 
-    assert frames.frame1 == bytes([0x11, 0xDA, 0x27, 0x00, 0xC5, 0x00, 0x00, 0xD7])
-    assert frames.frame2 == bytes([0x11, 0xDA, 0x27, 0x00, 0x42, 0x49, 0x05, 0xA2])
+    assert frames.frame1 == bytes([0x11, 0xDA, 0x27, 0x00, 0xC5, 0x10, 0x00, 0xE7])
+    assert frames.frame2 == bytes([0x11, 0xDA, 0x27, 0x00, 0x42, 0xFC, 0x24, 0x74])
     assert frames.frame3 == bytes(
         [
             0x11,
@@ -28,7 +28,7 @@ def test_cool_state_builds_three_daikin_frames_and_checksum():
             0x27,
             0x00,
             0x00,
-            0x31,
+            0x39,
             0x2E,
             0x00,
             0x30,
@@ -36,12 +36,12 @@ def test_cool_state_builds_three_daikin_frames_and_checksum():
             0x00,
             0x06,
             0x60,
+            0x20,
             0x00,
+            0xC1,
+            0x82,
             0x00,
-            0xC0,
-            0x00,
-            0x00,
-            0xC7,
+            0x72,
         ]
     )
 
@@ -57,7 +57,7 @@ def test_off_state_clears_power_bit_but_keeps_last_active_mode():
         )
     )
 
-    assert frames.frame3[5] == 0x40
+    assert frames.frame3[5] == 0x48
     assert frames.frame3[6] == 0x32
     assert frames.frame3[8] == 0x3F
     assert frames.frame3[-1] == sum(frames.frame3[:-1]) & 0xFF
@@ -67,9 +67,9 @@ def test_dry_and_fan_only_use_daikin_special_temperature_bytes():
     dry = build_daikin_frames(DaikinClimateState(hvac_mode="dry")).frame3
     fan_only = build_daikin_frames(DaikinClimateState(hvac_mode="fan_only")).frame3
 
-    assert dry[5] == 0x21
+    assert dry[5] == 0x29
     assert dry[6] == 0xC0
-    assert fan_only[5] == 0x61
+    assert fan_only[5] == 0x69
     assert fan_only[6] == 0x32
 
 
@@ -83,7 +83,7 @@ def test_fan_and_swing_modes_are_encoded_in_state_bytes():
         )
     )
 
-    assert frames.frame3[5] == 0x41
+    assert frames.frame3[5] == 0x49
     assert frames.frame3[8] == 0x7F
     assert frames.frame3[9] == 0x0F
     assert frames.frame3[-1] == sum(frames.frame3[:-1]) & 0xFF
@@ -92,22 +92,38 @@ def test_fan_and_swing_modes_are_encoded_in_state_bytes():
 def test_timings_are_signed_microseconds_for_home_assistant_infrared():
     timings = build_daikin_timings(DaikinClimateState(hvac_mode="cool"))
 
-    assert timings[:2] == [HEADER_MARK, -HEADER_SPACE]
-    assert timings[-1] == BIT_MARK
+    assert timings[:12] == [
+        BIT_MARK,
+        -360,
+        BIT_MARK,
+        -360,
+        BIT_MARK,
+        -360,
+        BIT_MARK,
+        -360,
+        BIT_MARK,
+        -360,
+        BIT_MARK,
+        -26800,
+    ]
+    assert timings[12:15] == [HEADER_MARK, -HEADER_SPACE, BIT_MARK]
+    assert timings[-1] == -200000
     assert all(timing != 0 for timing in timings)
     assert timings.count(-MESSAGE_SPACE) == 2
 
     byte_count = 8 + 8 + 19
     expected_count = (
-        2
+        12
+        + 2
+        + 1
         + (8 * 16)
         + 1
-        + 1
         + 2
+        + 1
         + (8 * 16)
         + 1
-        + 1
         + 2
+        + 1
         + (19 * 16)
         + 1
     )

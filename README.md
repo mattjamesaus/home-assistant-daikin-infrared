@@ -43,6 +43,8 @@ For testing, wait a couple of seconds between changes and start with a simple co
 
 This early house-specific profile does not expose fan auto because this unit appears more reliable when commands are sent with an explicit fan speed.
 
+The current protocol bytes and timing preamble are aligned with the public `daikin-arc466` implementation for ARC466-style remotes.
+
 ## Development
 
 Set up local tests:
