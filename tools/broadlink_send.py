@@ -72,18 +72,20 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--temp", default=23, type=float, help="Target temperature")
     parser.add_argument(
         "--fan",
-        default="speed_1",
+        default="low",
         choices=[
+            "low",
+            "medium-low",
+            "medium",
+            "medium-high",
+            "high",
+            "auto",
+            "quiet",
             "speed_1",
             "speed_2",
             "speed_3",
             "speed_4",
             "speed_5",
-            "auto",
-            "quiet",
-            "low",
-            "medium",
-            "high",
             "night",
         ],
     )

@@ -1,4 +1,4 @@
-"""Config flow for Daikin Infrared."""
+"""Config flow for Daikin Air Conditioner IR."""
 
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ from .const import (
 
 
 class DaikinInfraredConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Daikin Infrared."""
+    """Handle a config flow for Daikin Air Conditioner IR."""
 
     VERSION = 1
 
@@ -76,4 +76,3 @@ class DaikinInfraredConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
         )
-

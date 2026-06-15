@@ -51,14 +51,16 @@ FAN_MODE_BYTES = {
     "auto": FAN_AUTO,
     "quiet": FAN_QUIET,
     "night": FAN_QUIET,
+    "low": FAN_SPEED_1,
+    "medium-low": FAN_SPEED_2,
+    "medium": FAN_SPEED_3,
+    "medium-high": FAN_SPEED_4,
+    "high": FAN_SPEED_5,
     "speed_1": FAN_SPEED_1,
     "speed_2": FAN_SPEED_2,
     "speed_3": FAN_SPEED_3,
     "speed_4": FAN_SPEED_4,
     "speed_5": FAN_SPEED_5,
-    "low": FAN_SPEED_1,
-    "medium": FAN_SPEED_3,
-    "high": FAN_SPEED_5,
 }
 
 SWING_BITS = {
@@ -76,7 +78,7 @@ class DaikinClimateState:
     hvac_mode: str = "cool"
     power_on: bool = True
     target_temperature: float = 24.0
-    fan_mode: str = "speed_1"
+    fan_mode: str = "low"
     swing_mode: str = "off"
 
 

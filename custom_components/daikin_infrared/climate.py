@@ -1,4 +1,4 @@
-"""Climate platform for Daikin Infrared."""
+"""Climate platform for Daikin Air Conditioner IR."""
 
 from __future__ import annotations
 
@@ -48,23 +48,25 @@ HA_TO_PROTOCOL_HVAC = {
 
 FAN_AUTO = "auto"
 FAN_QUIET = "quiet"
-FAN_SPEED_1 = "speed_1"
-FAN_SPEED_2 = "speed_2"
-FAN_SPEED_3 = "speed_3"
-FAN_SPEED_4 = "speed_4"
-FAN_SPEED_5 = "speed_5"
+FAN_LOW = "low"
+FAN_MEDIUM_LOW = "medium-low"
+FAN_MEDIUM = "medium"
+FAN_MEDIUM_HIGH = "medium-high"
+FAN_HIGH = "high"
 
 HA_TO_PROTOCOL_FAN = {
     FAN_AUTO: "auto",
     FAN_QUIET: "quiet",
-    FAN_SPEED_1: "speed_1",
-    FAN_SPEED_2: "speed_2",
-    FAN_SPEED_3: "speed_3",
-    FAN_SPEED_4: "speed_4",
-    FAN_SPEED_5: "speed_5",
-    "low": "speed_1",
-    "medium": "speed_3",
-    "high": "speed_5",
+    FAN_LOW: "low",
+    FAN_MEDIUM_LOW: "medium-low",
+    FAN_MEDIUM: "medium",
+    FAN_MEDIUM_HIGH: "medium-high",
+    FAN_HIGH: "high",
+    "speed_1": "low",
+    "speed_2": "medium-low",
+    "speed_3": "medium",
+    "speed_4": "medium-high",
+    "speed_5": "high",
     "night": "quiet",
 }
 
@@ -81,7 +83,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Daikin Infrared climate entity from a config entry."""
+    """Set up Daikin Air Conditioner IR climate entity from a config entry."""
     async_add_entities([DaikinInfraredClimate(entry)])
 
 
@@ -104,11 +106,11 @@ class DaikinInfraredClimate(InfraredEmitterConsumerEntity, ClimateEntity, Restor
         HVACMode.FAN_ONLY,
     ]
     _attr_fan_modes = [
-        FAN_SPEED_1,
-        FAN_SPEED_2,
-        FAN_SPEED_3,
-        FAN_SPEED_4,
-        FAN_SPEED_5,
+        FAN_LOW,
+        FAN_MEDIUM_LOW,
+        FAN_MEDIUM,
+        FAN_MEDIUM_HIGH,
+        FAN_HIGH,
         FAN_AUTO,
         FAN_QUIET,
     ]
@@ -146,7 +148,7 @@ class DaikinInfraredClimate(InfraredEmitterConsumerEntity, ClimateEntity, Restor
 
         self._attr_hvac_mode = HVACMode.OFF
         self._attr_target_temperature = 24.0
-        self._attr_fan_mode = FAN_SPEED_1
+        self._attr_fan_mode = FAN_LOW
         self._attr_swing_mode = SWING_OFF
         self._last_on_hvac_mode = HVACMode.COOL
         self._send_lock = asyncio.Lock()

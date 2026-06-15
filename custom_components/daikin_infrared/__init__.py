@@ -1,4 +1,4 @@
-"""Daikin Infrared custom integration."""
+"""Daikin Air Conditioner IR custom integration."""
 
 from __future__ import annotations
 
@@ -12,11 +12,11 @@ PLATFORMS = ["climate"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Daikin Infrared from a config entry."""
+    """Set up Daikin Air Conditioner IR from a config entry."""
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a Daikin Infrared config entry."""
+    """Unload a Daikin Air Conditioner IR config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

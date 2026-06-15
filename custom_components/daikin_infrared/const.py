@@ -1,4 +1,4 @@
-"""Constants for Daikin Infrared."""
+"""Constants for Daikin Air Conditioner IR."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ DOMAIN = "daikin_infrared"
 CONF_INFRARED_EMITTER_ENTITY_ID = "infrared_emitter_entity_id"
 CONF_MODEL_PROFILE = "model_profile"
 
-DEFAULT_NAME = "Kitchen Living Daikin"
+DEFAULT_NAME = "Daikin Air Conditioner"
 DEFAULT_MODEL_PROFILE = "daikin_xl_arc466a16"
 
 
@@ -29,4 +29,3 @@ MODEL_PROFILES = {
         remote_models=("ARC466A16", "ARC466A14"),
     )
 }
-

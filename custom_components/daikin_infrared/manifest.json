@@ -1,13 +1,13 @@
 {
   "domain": "daikin_infrared",
-  "name": "Daikin Infrared",
+  "name": "Daikin Air Conditioner IR",
   "codeowners": [],
   "config_flow": true,
   "dependencies": ["infrared"],
-  "documentation": "https://github.com/matthewjames/home-assistant-daikin-infrared",
+  "documentation": "https://github.com/mattjamesaus/home-assistant-daikin-infrared",
   "integration_type": "device",
   "iot_class": "assumed_state",
-  "issue_tracker": "https://github.com/matthewjames/home-assistant-daikin-infrared/issues",
+  "issue_tracker": "https://github.com/mattjamesaus/home-assistant-daikin-infrared/issues",
   "requirements": [],
-  "version": "0.0.8"
+  "version": "1.0.0"
 }

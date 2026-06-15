@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Daikin Infrared",
+        "title": "Daikin Air Conditioner IR",
         "description": "Choose the Daikin profile and infrared emitter to use.",
         "data": {
           "model_profile": "Model profile",
@@ -16,4 +16,3 @@
     }
   }
 }
-
